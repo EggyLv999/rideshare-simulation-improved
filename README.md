@@ -1,0 +1,1 @@
+Run compute.py to do stuff. Data can be gathered using [http://www.nyc.gov/html/tlc/html/about/trip_record_data.shtml] and basetodat.py and dist.py and processdata.py. 
