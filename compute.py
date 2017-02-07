@@ -1,7 +1,7 @@
 import pickle, numpy, itertools, math
 from copy import copy
 
-fin = 'mat1.txt'
+fin = 'data/mat0'
 MAXSIZE = 4
 
 # want to max
