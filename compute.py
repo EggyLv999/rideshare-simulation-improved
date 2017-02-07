@@ -13,7 +13,7 @@ def maxsavings(alloc, sourced):
 
 # want to min
 def squaresavings(alloc, sourced):
-	return sum([(sourced[i] - alloc[i])**2 for i in xrange(len(alloc))])
+	return numpy.var([sourced[i] - alloc[i] for i in xrange(len(alloc))])
 
 def CEG(sourced, vn):
 	sourced = list(sourced)
