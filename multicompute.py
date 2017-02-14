@@ -18,6 +18,7 @@ def varsavings(alloc, sourced):
 	return numpy.std([sourced[i] - alloc[i] for i in xrange(len(alloc))])
 
 def CEG(sourced, vn):
+	vn = float(vn)
 	sourced = list(sourced)
 	alloc = numpy.zeros(9)
 	chosen = min(sourced)
@@ -35,6 +36,7 @@ def CEG(sourced, vn):
 	return alloc
 
 def CEL(sourced, vn):
+	vn = float(vn)
 	sourced = list(sourced)
 	alloc = numpy.full(9, -1)
 	chosen = min(sourced)
@@ -47,7 +49,7 @@ def CEL(sourced, vn):
 		chosen = min(sourced)
 		# print allocations
 	mean = savings / len([x for x in sourced if x != A_LOT])
-	for i in xrange(9):
+	for i in xrange(len(sourced)):
 		if alloc[i] == -1:
 			alloc[i] = sourced[i] - mean
 	return alloc
@@ -60,6 +62,25 @@ def list2st(list):
 	for i in list:
 		res += 1<<i
 	return res
+
+def groupify(allocator):
+	def GROUPED(sourced, vn, finalgroups, groups):
+		groups[0] = 0
+		alloc = numpy.zeros(len(sourced))
+		for groupnum in finalgroups[(1<<len(sourced))-1]:
+			group = []
+			for i in xrange(len(sourced)):
+				if (1<<i) & groupnum:
+					group.append(i)
+			if groups[groupnum] == 0:
+				print groupnum
+			groupalloc = allocator(numpy.array([sourced[i] for i in group]), groups[groupnum])
+			gaind = 0
+			for i in group:
+				alloc[i] = groupalloc[gaind]
+				gaind += 1
+		return alloc
+	return GROUPED
 
 def SHAPLEY(sourced, vn, finalgroups, groups):
 	groups[0] = 0
@@ -85,7 +106,7 @@ def popcount(x):
 def main():
 	allocations = []
 	statistics = []
-	for run in xrange(20):
+	for run in xrange(19):
 		omat = numpy.array(pickle.load(open('data/mat{}'.format(run), 'r')))
 		sourced = omat[0,1:]
 		# print omat
@@ -137,9 +158,12 @@ def main():
 			finals[st] = best
 			finalgroups[st] = finalgroups[st-bestgroup] + [bestgroup]
 		vn = finals[(1<<dim) - 1]
-		ceg = CEG(sourced, vn)
-		cel = CEL(sourced, vn)
-		prop = PROP(sourced, vn)
+		GCEG = groupify(CEG)
+		GCEL = groupify(CEL)
+		GPROP = groupify(PROP)
+		ceg = GCEG(sourced, vn, finalgroups, groups)
+		cel = GCEL(sourced, vn, finalgroups, groups)
+		prop = GPROP(sourced, vn, finalgroups, groups)
 		shapley = SHAPLEY(sourced, vn, finalgroups, groups)
 		allocations.append([alloc * 100.0 / max(sourced) for alloc in [sourced, ceg, cel, prop, shapley]])
 		sourced = sourced * 100.0 / max(sourced)
