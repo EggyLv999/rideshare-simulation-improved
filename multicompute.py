@@ -1,9 +1,9 @@
 import pickle, numpy, itertools, math
 from copy import copy
 
-fin = 'data/mat0'
 MAXSIZE = 4
 
+SIZ = 19
 A_LOT = 999999
 
 # want to max
@@ -20,7 +20,7 @@ def varsavings(alloc, sourced):
 def CEG(sourced, vn):
 	vn = float(vn)
 	sourced = list(sourced)
-	alloc = numpy.zeros(9)
+	alloc = numpy.zeros(SIZ)
 	chosen = min(sourced)
 	while chosen < vn / len([x for x in sourced if x != A_LOT]):
 		cindex = list(sourced).index(chosen)
@@ -38,7 +38,7 @@ def CEG(sourced, vn):
 def CEL(sourced, vn):
 	vn = float(vn)
 	sourced = list(sourced)
-	alloc = numpy.full(9, -1)
+	alloc = numpy.full(SIZ, -1)
 	chosen = min(sourced)
 	savings = sum(sourced) - vn
 	while chosen < savings / len([x for x in sourced if x != A_LOT]):
@@ -115,10 +115,10 @@ def main():
 		s2d.sort(key=lambda a: a[0])
 		# print s2d
 		mat = omat[1:,1:]
-		for i in xrange(9):
+		for i in xrange(SIZ):
 			sourced[i] = s2d[i][0]
-		for i in xrange(9):
-			for j in xrange(9):
+		for i in xrange(SIZ):
+			for j in xrange(SIZ):
 				mat[i][j] = omat[s2d[i][1]+1][s2d[j][1]+1]
 		# print sourced
 		# print mat
@@ -130,7 +130,7 @@ def main():
 			if popcount(st) <= MAXSIZE and st != 0:
 				validst.append(st)
 		for st in validst:
-			mi = 999999999
+			mi = A_LOT
 			pl = []
 			for i in xrange(dim):
 				if((st >> i) & 1):
@@ -173,18 +173,6 @@ def main():
 	statistics = numpy.array(statistics)
 	print numpy.average(allocations, 0)
 	print numpy.average(statistics, 0)
-	# print minsavings(ceg, sourced)
-	# print maxsavings(ceg, sourced)
-	# print varsavings(ceg, sourced)
-	# print minsavings(cel, sourced)
-	# print maxsavings(cel, sourced)
-	# print varsavings(cel, sourced)
-	# print minsavings(prop, sourced)
-	# print maxsavings(prop, sourced)
-	# print varsavings(prop, sourced)
-	# print minsavings(shapley, sourced)
-	# print maxsavings(shapley, sourced)
-	# print varsavings(shapley, sourced)
 
 if __name__ == '__main__':
 	main()
