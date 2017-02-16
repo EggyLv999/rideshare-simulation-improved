@@ -106,7 +106,7 @@ def popcount(x):
 def main():
 	allocations = []
 	statistics = []
-	for run in xrange(19):
+	for run in xrange(25, 26):
 		omat = numpy.array(pickle.load(open('data/mat{}'.format(run), 'r')))
 		sourced = omat[0,1:]
 		# print omat
@@ -143,6 +143,8 @@ def main():
 				mi = min(mi, d)
 			groups[st] = mi
 		for st in xrange(1 << dim):
+			if st%10000 == 0:
+				print st/10000
 			if st == 0:
 				finals[st] = 0
 				finalgroups[st] = []
@@ -168,7 +170,7 @@ def main():
 		allocations.append([alloc * 100.0 / max(sourced) for alloc in [sourced, ceg, cel, prop, shapley]])
 		sourced = sourced * 100.0 / max(sourced)
 		
-		statistics.append([[minsavings(alloc, sourced), maxsavings(alloc, sourced), varsavings(alloc, sourced)] for alloc in allocations[run]])
+		statistics.append([[minsavings(alloc, sourced), maxsavings(alloc, sourced), varsavings(alloc, sourced)] for alloc in allocations[0]])
 	allocations = numpy.array(allocations)
 	statistics = numpy.array(statistics)
 	print numpy.average(allocations, 0)
