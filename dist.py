@@ -1,12 +1,12 @@
 import pickle, requests, os
 
-SIZ = 19
+SIZ = 9
 CHUNKS = SIZ / 10 + 1
 
 def main():
-	for run in xrange(25, 26):
-		fin = 'data/dat{}'.format(run)
-		fout = 'data/mat{}'.format(run)
+	for run in xrange(25):
+		fin = 'data2/dat{}'.format(run)
+		fout = 'data2/mat{}'.format(run)
 		locs = pickle.load(open(fin, 'r'))
 		save = open(fout, 'w')
 		if len(locs) < SIZ:

@@ -4,7 +4,7 @@ import pickle
 def main():
 	
 	coll = MongoClient().db.taxi11
-	agg = coll.aggregate([{'$sample': {'size': 40}}])
+	agg = coll.aggregate([{'$sample': {'size': 500}}])
 	i = 0
 	for sample in agg:
 		# print sample
@@ -15,20 +15,27 @@ def main():
 
 		res = coll.find({
 			'pickupLatitude': {
-				'$gt': lat - 0.0003,
-				'$lt': lat + 0.0003
+				'$gt': lat - 0.0001,
+				'$lt': lat + 0.0001
 			},
 			'pickupLongitude': {
-				'$gt': lon - 0.0003,
-				'$lt': lon + 0.0003
+				'$gt': lon - 0.0001,
+				'$lt': lon + 0.0001
 			}
 		})
 		print res.count()
 		if res.count() >= 10:
-			file = open('data/dat{}'.format(i), 'w')
+			file = open('data2/dat{}'.format(i), 'w')
 			l = []
+			bf = False
 			for r in res:
+				if r['pickupLatitude'] < 30 or r['pickupLongitude'] > -60:
+					bf = True
+					break
 				l.append(r)
+			if bf:
+				print 'break'
+				continue
 			pickle.dump(l, file)
 			i += 1
 			file.close()
