@@ -1,10 +1,11 @@
-import pickle, requests, os
+import pickle, requests, os, time
 
 SIZ = 9
 CHUNKS = SIZ / 10 + 1
 
 def main():
-	for run in xrange(25):
+	for run in xrange(398, 398+25): 
+		time.sleep(1)
 		fin = 'data2/dat{}'.format(run)
 		fout = 'data2/mat{}'.format(run)
 		locs = pickle.load(open(fin, 'r'))
@@ -18,6 +19,7 @@ def main():
 			sts[(i+1) / 10] += '|{},{}'.format(locs[i]['dropoffLatitude'],locs[i]['dropoffLongitude'])
 		for i in xrange(CHUNKS):
 			sts[i] = sts[i][1:]
+		print sts
 		rows = [[None] * CHUNKS for i in xrange(CHUNKS)]
 		for i in xrange(CHUNKS):
 			for j in xrange(CHUNKS):
@@ -31,6 +33,7 @@ def main():
 						'departure_time': 1496354400
 					})
 				rows[i][j] = res.json()['rows']
+				print res.json()
 		mat = [x[:] for x in [[0] * (SIZ+1)] * (SIZ+1)]
 		for i in xrange(SIZ+1):
 			for j in xrange(SIZ+1):

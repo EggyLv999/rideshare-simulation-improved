@@ -28,7 +28,6 @@ def CEG(sourced, vn):
 		vn -= chosen
 		sourced[cindex] = A_LOT
 		chosen = min(sourced)
-		# print alloc
 	mean = vn / len([x for x in sourced if x != A_LOT])
 	for i in xrange(len(alloc)):
 		if alloc[i] == 0:
@@ -47,7 +46,6 @@ def CEL(sourced, vn):
 		sourced[cindex] = A_LOT
 		savings -= chosen
 		chosen = min(sourced)
-		# print allocations
 	mean = savings / len([x for x in sourced if x != A_LOT])
 	for i in xrange(len(sourced)):
 		if alloc[i] == -1:
@@ -79,8 +77,6 @@ def groupify(allocator):
 			for i in xrange(len(sourced)):
 				if (1<<i) & groupnum:
 					group.append(i)
-			if groups[groupnum] == 0:
-				print groupnum
 			groupalloc = allocator(numpy.array([sourced[i] for i in group]), groups[groupnum])
 			gaind = 0
 			for i in group:
@@ -93,16 +89,22 @@ def SHAPLEY(sourced, vn, finalgroups, groups):
 	groups[0] = 0
 	alloc = numpy.zeros(len(sourced))
 	for groupnum in finalgroups[(1<<len(sourced))-1]:
-		group = []
-		for i in xrange(len(sourced)):
-			if (1<<i) & groupnum:
-				group.append(i)
+		group = st2list(groupnum)
 		for member in group:
 			perms = itertools.permutations(group)
 			marginal = 0.0
 			for perm in perms:
+				# if len(group) == 2:
+				# 	print perm[0:1+perm.index(member)]
+				# 	print groups[list2st(perm[0:1+perm.index(member)])]
+				# 	print perm[0:perm.index(member)]
+				# 	print groups[list2st(perm[0:perm.index(member)])]
+				# if 1+perm.index(member) == len(group):
+				# 	marginal += groups[groupnum] -\
+				# 		groups[list2st(perm[0:perm.index(member)])]
+				# else:
 				marginal += groups[list2st(perm[0:1+perm.index(member)])] -\
-					groups[list2st(perm[0:perm.index(member)])]
+						groups[list2st(perm[0:perm.index(member)])]
 			alloc[member] = marginal / math.factorial(len(group))
 	return alloc
 
@@ -121,18 +123,29 @@ def printarr(a):
 def main():
 	allocations = [[], [], [], [], []]
 	statistics = [[], [], [], [], []]
-	for run in xrange(19):
-		omat = numpy.array(pickle.load(open('data/mat{}'.format(run), 'r')))
-		sourced = omat[0,1:]
-		dim = len(sourced)
-		s2d = [(sourced[i], i) for i in xrange(dim)]
+	fullallocations = []
+	fullstatistics = []
+	suc = 0
+	fail = 0
+	# for run in xrange(210, 211):
+	for run in xrange(423):
+		# print run
+		omat = numpy.array(pickle.load(open('data2/mat{}'.format(run), 'r')))
+		# print omat
+		osourced = omat[0,1:]
+		dim = len(osourced)
+		s2d = [(osourced[i], i) for i in xrange(dim)]
 		s2d.sort(key=lambda a: a[0])
-		mat = omat[1:,1:]
+		mat = numpy.zeros((dim, dim))
+		sourced = numpy.array([-1 for k in xrange(dim)])
 		for i in xrange(SIZ):
 			sourced[i] = s2d[i][0]
 		for i in xrange(SIZ):
 			for j in xrange(SIZ):
 				mat[i][j] = omat[s2d[i][1]+1][s2d[j][1]+1]
+		# print s2d
+		# print sourced
+		# print mat
 		groups = {}
 		finals = {}
 		finalgroups = {}
@@ -142,10 +155,7 @@ def main():
 				validst.append(st)
 		for st in validst:
 			mi = A_LOT
-			pl = []
-			for i in xrange(dim):
-				if((st >> i) & 1):
-					pl.append(i)
+			pl = st2list(st)
 			perms = itertools.permutations(pl)
 			for perm in perms:
 				d = sourced[perm[0]]
@@ -154,8 +164,6 @@ def main():
 				mi = min(mi, d)
 			groups[st] = mi
 		for st in xrange(1 << dim):
-			if st%10000 == 0:
-				print st/10000
 			if st == 0:
 				finals[st] = 0
 				finalgroups[st] = []
@@ -180,27 +188,51 @@ def main():
 		shapley = SHAPLEY(sourced, vn, finalgroups, groups)
 		for groupnum in finalgroups[(1<<len(sourced))-1]:
 			group = st2list(groupnum)
-			normalizer = 100.0 / max([sourced[i] for i in group])
+			normalizer = 100.0 / groups[groupnum]
 			galloc = [numpy.array([alloc[i] for i in group]) * normalizer for alloc in [sourced, ceg, cel, prop, shapley]]
-			if len(galloc[1])>1:
-				print len(galloc[1])
-				print(galloc[1][len(galloc[1])-2]-galloc[1][len(galloc[1])-1])
-				print galloc[1]
+			if len(galloc[1])==4:
+				if galloc[1][0] == galloc[1][1] and galloc[1][1] == galloc[1][2] and galloc[1][2] == galloc[1][3]:
+					suc += 1
+				fail += 1
+			if len(galloc[1])==3:
+				if galloc[1][0] == galloc[1][1] and galloc[1][1] == galloc[1][2]:
+					suc += 1
+				fail += 1
+			if len(galloc[1])==2:
+				# print len(galloc[1])
+				# print(galloc[1][len(galloc[1])-2]-galloc[1][len(galloc[1])-1])
+				# print galloc[1]
+				if galloc[1][0] == galloc[1][1]:
+					suc += 1
+				fail += 1
+			# if len(galloc[4])==2:
+			# 	print groups[groupnum]
+			# 	print galloc[4]
 			allocations[len(group)].append(galloc)
 			gsourced = galloc[0]
 			statistics[len(group)].append([[fun(alloc, gsourced) for fun in [minsavings, maxsavings, varsavings]] for alloc in galloc])
+		Fnormalizer = 100.0 / vn
+		Falloc = [alloc * Fnormalizer for alloc in [sourced, ceg, cel, prop, shapley]]
+		fullallocations.append(Falloc)
+		fullstatistics.append([[fun(alloc, sourced * Fnormalizer) for fun in [minsavings, maxsavings, varsavings]] for alloc in Falloc])
+	print float(suc) / fail
+	print fail
+	print 'Number of groups is {}'.format(fail + len(allocations[1]))
 
 	allocations = [numpy.array(a) for a in allocations]
 	statistics = [numpy.array(a) for a in statistics]
+	print allocations[1].shape
 	print allocations[2].shape
 	print allocations[3].shape
 	print allocations[4].shape
 	printarr(numpy.average(allocations[2], 0))
 	printarr(numpy.average(allocations[3], 0))
 	printarr(numpy.average(allocations[4], 0))
-	printarr(numpy.average(statistics[2], 0))
-	printarr(numpy.average(statistics[3], 0))
-	printarr(numpy.average(statistics[4], 0))
+	# printarr(numpy.average(statistics[2], 0))
+	# printarr(numpy.average(statistics[3], 0))
+	# printarr(numpy.average(statistics[4], 0))
+	printarr(numpy.average(fullallocations, 0))
+	printarr(numpy.average(fullstatistics, 0))
 
 if __name__ == '__main__':
 	main()
