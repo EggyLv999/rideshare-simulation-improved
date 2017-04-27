@@ -5,7 +5,7 @@ def main():
 	
 	coll = MongoClient().db.taxi11
 	agg = coll.aggregate([{'$sample': {'size': 500}}])
-	i = 200
+	i = 0
 	for sample in agg:
 		# print sample
 		lat = sample['pickupLatitude']
